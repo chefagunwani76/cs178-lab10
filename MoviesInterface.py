@@ -1,7 +1,7 @@
-# name: YOUR NAME HERE
-# date:
+# name:Chidera Agu
+# date: 3/4/2026
 # description: Implementation of CRUD operations with DynamoDB — CS178 Lab 10
-# proposed score: 0 (out of 5) -- if I don't change this, I agree to get 0 points.
+# proposed score: 5 (out of 5) --I agree to get 5 points.
 
 import boto3
 
@@ -10,17 +10,52 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('Movies')
 
 def create_movie():
-    """
-    Prompt user for a Movie Title.
-    Add the movie to the database with the title and an empty Ratings list.
-    """
-    print("creating a movie")
+    user_input = input("Enter a movie title: ")
+
+    response = table.get_item(Key = {"Title":user_input})
+    item = response.get("Item")
+
+    if item:
+        print("Movie already exists in this database")
+
+    else:
+        new_movie = {
+            "Title"   : user_input,
+            "Ratings" : []
+        }
+        table.put_item(Item=new_movie)
+        print("creating a movie")
+    
+
+def print_movie(movie):
+    """Print a single movie's details in a readable format."""
+    title = movie.get("Title", "Unknown Title")
+    year = movie.get("Year", "Unknown Year")
+    director = movie.get("Director", "Unknown Director")
+    # Ratings is a nested map in the table — handle it gracefully
+    ratings = movie.get("Ratings", "No Ratings")
+    #rating_str = ", ".join(f"{k}: {v}" for k, v in ratings.items()) if ratings else "No ratings"
+    
+    print(f"  Title : {title}")
+    print(f"  Year  : {year}")
+    print(f"  Ratings: {ratings}")
+    print(f"  Director: {director}")
+    print()
+
+
 
 def print_all_movies():
-    """
-    Display all movies in the database.
-    """
-    print("display all movies")
+    """Scan the entire Movies table and print each item."""
+    response = table.scan()
+    items = response.get("Items", [])
+    
+    if not items:
+        print("No movies found. Make sure your DynamoDB table has data.")
+        return
+    
+    print(f"Found {len(items)} movie(s):\n")
+    for movie in items:
+        print_movie(movie)
 
 def update_rating():
     """
