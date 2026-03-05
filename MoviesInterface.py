@@ -59,10 +59,12 @@ def print_all_movies():
 
 class TitleNotFound(Exception):
     pass
+class EmptyList(Exception):
+    pass
 
 def update_rating():
     try:
-        title = input("What is the movie title? ")
+        title = input("What is the movie you would like to update? ")
         response = table.get_item(Key={"Title": title})
         if "Item" not in response:
             raise TitleNotFound("Movie title was not found in database.")
@@ -80,7 +82,7 @@ def update_rating():
 
 def delete_movie():
     try:
-        title = input("What is the movie title that you would like to delete? ")
+        title = input("What is the movie you would like to delete? ")
         response = table.get_item(Key={"Title":title})
         if "Item" not in response:
             raise TitleNotFound("Movie title was not found in database.")
@@ -92,11 +94,23 @@ def delete_movie():
         print("deleting movie")
 
 def query_movie():
-    """
-    Prompt user for a Movie Title.
-    Print out the average of all ratings in the movie's Ratings list.
-    """
-    print("query movie")
+    try:
+        title = input("What is the movie you would like to query? ")
+        response = table.get_item(Key={'Title': title})
+        if "Item" not in response:
+            raise TitleNotFound("Movie title was not found in database.")
+        movie = response.get("Item")
+        ratings_list = movie["Ratings"]
+        if len(ratings_list)==0:
+            raise EmptyList("There are no ratings to average.")
+        average_rating = sum(ratings_list)/len(ratings_list)
+    except TitleNotFound as e: 
+        print("Custom error:", e)
+    except EmptyList as x:
+        print("Custom error:", x)
+    else:
+        print("query movie")
+        print(f"\nThe average rating for {title} is: {average_rating}")
 
 def print_menu():
     print("----------------------------")
