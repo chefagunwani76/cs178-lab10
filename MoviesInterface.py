@@ -66,7 +66,7 @@ def update_rating():
         response = table.get_item(Key={"Title": title})
         if "Item" not in response:
             raise TitleNotFound("Movie title was not found in database.")
-        rating = int(input("What is the rating (integer): "))
+        rating = int(input("What is the rating?: "))
         table.update_item(
             Key={"Title": title},
             UpdateExpression="SET Ratings = list_append(Ratings, :r)",
@@ -79,11 +79,17 @@ def update_rating():
         print("updating rating")
 
 def delete_movie():
-    """
-    Prompt user for a Movie Title.
-    Delete that item from the database.
-    """
-    print("deleting movie")
+    try:
+        title = input("What is the movie title that you would like to delete? ")
+        response = table.get_item(Key={"Title":title})
+        if "Item" not in response:
+            raise TitleNotFound("Movie title was not found in database.")
+        table.delete_item(
+            Key={'Title': title,})
+    except TitleNotFound as e:
+        print("Custom error:", e)
+    else: 
+        print("deleting movie")
 
 def query_movie():
     """
