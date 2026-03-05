@@ -57,13 +57,26 @@ def print_all_movies():
     for movie in items:
         print_movie(movie)
 
+class TitleNotFound(Exception):
+    pass
+
 def update_rating():
-    """
-    Prompt user for a Movie Title.
-    Prompt user for a rating (integer).
-    Append the rating to the movie's Ratings list in the database.
-    """
-    print("updating rating")
+    try:
+        title = input("What is the movie title? ")
+        response = table.get_item(Key={"Title": title})
+        if "Item" not in response:
+            raise TitleNotFound("Movie title was not found in database.")
+        rating = int(input("What is the rating (integer): "))
+        table.update_item(
+            Key={"Title": title},
+            UpdateExpression="SET Ratings = list_append(Ratings, :r)",
+            ExpressionAttributeValues={':r': [rating]})
+    except TitleNotFound as e:
+        print("Custom error:", e)
+    except ValueError:
+        print("Input is not a valid integer")
+    else:
+        print("updating rating")
 
 def delete_movie():
     """
